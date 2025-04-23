@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Upload Interview</title>
+</head>
+<body>
+  <h2>Upload Audio</h2>
+  <form method="POST" enctype="multipart/form-data">
+    <input type="file" name="audio" required>
+    <button type="submit">Analyze</button>
+  </form>
+
+  {% if result %}
+    <h3>Transcript</h3>
+    <p>{{ result.transcript }}</p>
+    <h4>Filler Words</h4>
+    <p>{{ result.filler_words | join(', ') }}</p>
+    <h4>Suggestions</h4>
+    <ul>
+      {% for tip in result.tips %}
+        <li>{{ tip }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</body>
+</html>

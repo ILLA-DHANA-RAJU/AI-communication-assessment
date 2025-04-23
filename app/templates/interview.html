@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Communication Assessor</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 2rem; }
+    textarea { width: 100%; height: 200px; margin-top: 1rem; }
+    button { padding: 0.5rem 1rem; margin-top: 1rem; }
+    .status { margin-top: 1rem; color: green; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <h2>🎤 Speak and See Your Transcript</h2>
+
+  <button id="start-recording">Start Listening</button>
+  <button id="stop-recording" disabled>Stop Listening</button>
+
+  <textarea id="transcript" placeholder="Your spoken words will appear here..."></textarea>
+
+  <div class="status" id="status">Status: Idle</div>
+  <button id="sendBtn">Analyze Communication</button>
+
+
+  <script>
+    const startBtn = document.getElementById('start-recording');
+    const stopBtn = document.getElementById('stop-recording');
+    const transcriptBox = document.getElementById('transcript');
+    const status = document.getElementById('status');
+
+    // Check for SpeechRecognition support
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert('Your browser does not support Speech Recognition. Try using Chrome.');
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    let fullTranscript = '';
+
+    recognition.onstart = () => {
+      status.textContent = 'Status: Listening...';
+    };
+
+    recognition.onresult = (event) => {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          fullTranscript += transcript + ' ';
+        } else {
+          interim += transcript;
+        }
+      }
+      transcriptBox.value = fullTranscript + interim;
+    };
+
+    recognition.onend = () => {
+      status.textContent = 'Status: Stopped.';
+    };
+
+    startBtn.onclick = () => {
+      recognition.start();
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+    };
+
+    stopBtn.onclick = () => {
+      recognition.stop();
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+    };
+    
+  document.getElementById('sendBtn').addEventListener('click', () => {
+  const transcript = transcriptBox.value;
+
+  fetch('/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: transcript })
+  })
+  .then(res => res.json())
+  .then(data => {
+    console.log('Analysis:', data);
+    // show results on the page
+  })
+  .catch(err => console.error('Error sending transcript:', err));
+});
+
+  </script>
+
+</body>
+</html>
